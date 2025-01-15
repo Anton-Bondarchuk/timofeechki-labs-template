@@ -1,4 +1,4 @@
-FROM node:20.11 as build
+FROM node:20.11-alpine as build
 RUN npm i --global pnpm
 WORKDIR /opt/work
 COPY .npmrc package.json pnpm-lock.yaml /opt/work/
@@ -9,7 +9,12 @@ COPY . .
 
 RUN pnpm run build
 
-FROM nginx:1.25.4-alpine
+FROM build as devrunner
+
+CMD ["pnpm", "run", "dev", "--host"]
+
+FROM nginx:1.25.4-alpine as prodrunner
+
 EXPOSE 11002
 COPY --from=build /opt/work/nginx/conf.d /etc/nginx/conf.d
 COPY --from=build /opt/work/build /opt/work/build
